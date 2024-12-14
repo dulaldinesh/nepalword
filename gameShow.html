@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ne">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>नेपाली शब्द सिक्ने खेल</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: black;
+            overflow: hidden;
+            color: white;
+        }
+        
+        .container {
+            width: 80%;
+            margin: auto;
+            margin-top: 50px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0.5);
+            background: linear-gradient(45deg, #ff6f91, #ff9671, #ffc75f, #f9f871);
+            animation: lightPulse 5s infinite;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        @keyframes lightPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 30px 20px rgba(255, 255, 255, 0.8);
+            }
+        }
+        
+        .scoreboard {
+            text-align: left;
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: white;
+            width: 40%;
+        }
+        
+        .scoreboard h3 {
+            margin-bottom: 10px;
+        }
+        
+        .scoreboard p {
+            margin: 5px 0;
+        }
+        
+        .question-container {
+            width: 55%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #fff;
+        }
+        
+        #question {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        
+        .options {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .option-button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #6200ea;
+            color: white;
+            transition: background 0.3s;
+        }
+        
+        .option-button:hover {
+            background: #3700b3;
+        }
+        
+        #feedback {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+        
+        #nextButton {
+            display: none;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background: #ff5722;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        /* Butterfly animation */
+        
+        .butterfly {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: url('butterfly.png') no-repeat;
+            background-size: contain;
+            animation: fly 10s infinite;
+        }
+        
+        @keyframes fly {
+            0% {
+                transform: translate(0, 0);
+            }
+            25% {
+                transform: translate(100vw, 30vh);
+            }
+            50% {
+                transform: translate(50vw, 70vh);
+            }
+            75% {
+                transform: translate(80vw, 10vh);
+            }
+            100% {
+                transform: translate(0, 0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="butterfly"></div>
+    <div class="butterfly" style="animation-delay: 3s;"></div>
+    <div class="butterfly" style="animation-delay: 6s;"></div>
+
+    <div class="container">
+        <div class="question-container">
+            <h1>नेपाली शब्द सिक्ने खेल</h1>
+            <div id="question">लोड हुँदै...</div>
+            <div class="options">
+                <button class="option-button" onclick="checkAnswer(this.innerText)">विकल्प 1</button>
+                <button class="option-button" onclick="checkAnswer(this.innerText)">विकल्प 2</button>
+                <button class="option-button" onclick="checkAnswer(this.innerText)">विकल्प 3</button>
+                <button class="option-button" onclick="checkAnswer(this.innerText)">विकल्प 4</button>
+            </div>
+            <div id="feedback"></div>
+            <button id="nextButton" onclick="nextQuestion()">अर्को प्रश्न</button>
+            <button id="audioButton" onclick="playMeaning()">शब्दको अर्थ सुन्नुहोस्</button>
+        </div>
+
+        <div class="scoreboard">
+            <h3>स्कोरबोर्ड</h3>
+            <p id="correctCount">सहि उत्तर: 0</p>
+            <p id="wrongCount">गलत उत्तर: 0</p>
+            <p id="performance">प्रदर्शन: </p>
+        </div>
+    </div>
+
+    <script>
+        // JSON Data (Example Words Pool)
+        const wordsPool = [{
+                "word": "Car",
+                "options": ["कार", "ट्रक", "बस", "विमान"],
+                "answer": "कार",
+                "meaning": "कार भन्नाले चार पाङ्ग्रे सवारी साधनलाई जनाउँछ।"
+            }, {
+                "word": "Tree",
+                "options": ["पात", "रुख", "फूल", "फल"],
+                "answer": "रुख",
+                "meaning": "रुख भन्नाले प्रायः ठूला हरियाली र जीवन दिने वनस्पति जनाउँछ।"
+            }, {
+                "word": "Dog",
+                "options": ["कुकुर", "बिरालो", "गधा", "घोडा"],
+                "answer": "कुकुर",
+                "meaning": "कुकुर भन्नाले एक प्रकारको घरेलु जनावरलाई जनाउँछ।"
+            }, {
+                "word": "Cat",
+                "options": ["कुकुर", "बिरालो", "गधा", "घोडा"],
+                "answer": "बिल्ली",
+                "meaning": "बिल्ली भन्नाले एक प्रकारको सानो घरेलु जनावरलाई जनाउँछ।"
+            }, {
+                "word": "Flower",
+                "options": ["फूल", "पात", "रुख", "घाँस"],
+                "answer": "फूल",
+                "meaning": "फूल भन्नाले रङ्गीन र सुगन्धित भागलाई जनाउँछ जसलाई वनस्पतिको प्रजनन कार्यका लागि प्रयोग गरिन्छ।"
+            }, {
+                "word": "School",
+                "options": ["पसल", "बगैचा", "विद्यालय", "घर"],
+                "answer": "विद्यालय",
+                "meaning": "विद्यालय भन्नाले पढाइको स्थानलाई जनाउँछ।"
+            }, {
+                "word": "Mountain",
+                "options": ["पहाड", "समुद्र", "वन", "नदी"],
+                "answer": "पहाड",
+                "meaning": "पहाड भन्नाले उच्च उचाईमा रहेको ठूलो ढुङ्गा या जमिनको भागलाई जनाउँछ।"
+            }, {
+                "word": "Sun",
+                "options": ["सूर्य", "चन्द्र", "तारा", "आकाश"],
+                "answer": "सूर्य",
+                "meaning": "सूर्य भन्नाले पृथ्वीको सबैभन्दा नजिकको तारा जनाउँछ जसले दिनको प्रकाश र उष्णता प्रदान गर्दछ।"
+            }, {
+                "word": "Moon",
+                "options": ["सूर्य", "चन्द्र", "तारा", "आकाश"],
+                "answer": "चन्द्र",
+                "meaning": "चन्द्र भन्नाले पृथ्वीको एक मात्र प्राकृतिक उपग्रहलाई जनाउँछ।"
+            }, {
+                "word": "Rain",
+                "options": ["वर्षा", "हावा", "सूर्य", "पानी"],
+                "answer": "वर्षा",
+                "meaning": "वर्षा भन्नाले आकाशबाट पानीको साना थोपाहरू पृथ्वीमा झर्ने प्रक्रिया हो।"
+            }, {
+                "word": "Snow",
+                "options": ["हिउँ", "पानी", "वर्षा", "सूर्य"],
+                "answer": "हिउँ",
+                "meaning": "हिउँ भन्नाले पानीको हानिकारक अवस्था जुन तलको तापमानमा जमेर बर्फको रूपमा परिणत हुन्छ।"
+            }, {
+                "word": "Bird",
+                "options": ["पशु", "पक्षी", "माछा", "जनावर"],
+                "answer": "पक्षी",
+                "meaning": "पक्षी भन्नाले पंख भएका जीवलाई जनाउँछ जसले उड्न सक्छ।"
+            }, {
+                "word": "Fish",
+                "options": ["पक्षी", "माछा", "जनावर", "कुकुर"],
+                "answer": "माछा",
+                "meaning": "माछा भन्नाले जलमा बस्ने ससाना जनावरलाई जनाउँछ।"
+            }, {
+                "word": "Book",
+                "options": ["किताब", "पत्रिका", "पन्ना", "लेख"],
+                "answer": "किताब",
+                "meaning": "किताब भन्नाले पढ्नका लागि लेखिएको सामग्री हो।"
+            }, {
+                "word": "Pen",
+                "options": ["कलम", "पेंसिल", "ब्रश", "चाक"],
+                "answer": "कलम",
+                "meaning": "कलम भन्नाले लेख्नका लागि प्रयोग हुने उपकरणलाई जनाउँछ।"
+            }, {
+                "word": "Chair",
+                "options": ["कुर्सी", "टेबल", "पाटी", "सस्तो"],
+                "answer": "कुर्सी",
+                "meaning": "कुर्सी भन्नाले एक प्रकारको सिटलाई जनाउँछ जसमा मानिस बस्न सक्छ।"
+            }, {
+                "word": "Table",
+                "options": ["टेबल", "कुर्सी", "पाटी", "पन्ना"],
+                "answer": "टेबल",
+                "meaning": "टेबल भन्नाले एक प्रकारको सानो मेजलाई जनाउँछ जसमा सामान राख्नका लागि प्रयोग गरिन्छ।"
+            }, {
+                "word": "Food",
+                "options": ["खाना", "पानी", "दूध", "फल"],
+                "answer": "खाना",
+                "meaning": "खाना भन्नाले मानिसले पचाउने खानेकुरा जनाउँछ।"
+            }, {
+                "word": "Water",
+                "options": ["पानी", "दूध", "जुस", "चिया"],
+                "answer": "पानी",
+                "meaning": "पानी भन्नाले ताजा र जीवनदायिनी द्रव्य जनाउँछ।"
+            }, {
+                "word": "Computer",
+                "options": ["कम्प्युटर", "टेलीफोन", "टिभी", "क्यामेरा"],
+                "answer": "कम्प्युटर",
+                "meaning": "कम्प्युटर भन्नाले गणना गर्ने यन्त्रलाई जनाउँछ।"
+            }, {
+                "word": "Phone",
+                "options": ["मोबाइल", "कम्प्युटर", "टेलिफोन", "रेडियो"],
+                "answer": "मोबाइल",
+                "meaning": "मोबाइल भन्नाले रङ्गीन टच स्क्रिन भएको सञ्चार यन्त्र जनाउँछ।"
+            }, {
+                "word": "Bag",
+                "options": ["झोला", "पर्स", "टोकरी", "सन्दूक"],
+                "answer": "झोला",
+                "meaning": "झोला भन्नाले सामान राख्नका लागि प्रयोग हुने कपडाको थैली जनाउँछ।"
+            }, {
+                "word": "T-shirt",
+                "options": ["टोपी", "जाकेट", "टी-शर्ट", "प्यान्ट"],
+                "answer": "टी-शर्ट",
+                "meaning": "टी-शर्ट भन्नाले सामान्य कपडाको एक प्रकार जनाउँछ जसलाई शरीरको माथिल्लो भागमा लगाइन्छ।"
+            }, {
+                "word": "Pants",
+                "options": ["प्यान्ट", "टी-शर्ट", "जाकेट", "स्वेटर"],
+                "answer": "प्यान्ट",
+                "meaning": "प्यान्ट भन्नाले निचोलेको र कपडामा बनाइएको कपडा जनाउँछ जसलाई मानिसले तलको भागमा लगाउँछन्।"
+            }, {
+                "word": "Shoes",
+                "options": ["चप्पल", "जूता", "सुत्ने", "टोपी"],
+                "answer": "जूता",
+                "meaning": "जूता भन्नाले पाउँका लागि लगाइने फुटवेयर जनाउँछ।"
+            }, {
+                "word": "Socks",
+                "options": ["मोजा", "जूता", "कपडा", "टोपी"],
+                "answer": "मोजा",
+                "meaning": "मोजा भन्नाले खुट्टामा लगाइने कपडाको एक प्रकार जनाउँछ।"
+            }, {
+                "word": "Laptop",
+                "options": ["कम्प्युटर", "लैपटप", "ट्याब्लेट", "मोबाइल"],
+                "answer": "लैपटप",
+                "meaning": "लैपटप भन्नाले पोर्टेबल कम्प्युटरलाई जनाउँछ।"
+            }, {
+                "word": "Television",
+                "options": ["रेडियो", "क्यामेरा", "टिभी", "फोटोकपी"],
+                "answer": "टिभी",
+                "meaning": "टिभी भन्नाले दृश्य र ध्वनि प्रसारण गर्ने यन्त्र जनाउँछ।"
+            }, {
+                "word": "Clock",
+                "options": ["घडी", "क्यामेरा", "प्यानल", "दुबो"],
+                "answer": "घडी",
+                "meaning": "घडी भन्नाले समय बताउने यन्त्र जनाउँछ।"
+            }, {
+                "word": "Watch",
+                "options": ["घडी", "स्मार्टफोन", "टिभी", "कम्प्युटर"],
+                "answer": "घडी",
+                "meaning": "घडी भन्नाले हातमा लगाउने समय देखाउने यन्त्र जनाउँछ।"
+            }, {
+                "word": "Bed",
+                "options": ["बिस्तरा", "पाटी", "सुत्ने", "झोला"],
+                "answer": "बिस्तरा",
+                "meaning": "बिस्तरा भन्नाले सुत्नको लागि प्रयोग हुने स्थान जनाउँछ।"
+            }, {
+                "word": "Chair",
+                "options": ["कुर्सी", "टेबल", "पाटी", "सस्तो"],
+                "answer": "कुर्सी",
+                "meaning": "कुर्सी भन्नाले एक प्रकारको सिटलाई जनाउँछ जसमा मानिस बस्न सक्छ।"
+            },
+            // Add more words similarly (you can add a total of 100 words)
+        ];
+
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let wrongAnswers = 0;
+
+        const congratulationsAudio = new Audio('sounds/congratulations.mp3');
+        const tryAgainAudio = new Audio('sounds/try-again.mp3');
+
+        function loadQuestion() {
+            const questionData = wordsPool[currentQuestionIndex];
+            const questionElement = document.getElementById("question");
+            const optionButtons = document.querySelectorAll(".option-button");
+
+            questionElement.innerText = `शब्द: ${questionData.word}`;
+
+            optionButtons.forEach((button, index) => {
+                button.innerText = questionData.options[index];
+            });
+
+            document.getElementById("feedback").innerText = '';
+            document.getElementById("nextButton").style.display = 'none';
+            updateScoreboard();
+        }
+
+        function checkAnswer(selectedAnswer) {
+            const feedback = document.getElementById("feedback");
+            const correctAnswer = wordsPool[currentQuestionIndex].answer;
+
+            if (selectedAnswer === correctAnswer) {
+                correctAnswers++;
+                feedback.innerText = 'अवस्य! सहि उत्तर!';
+                feedback.style.color = 'green';
+                congratulationsAudio.play();
+            } else {
+                wrongAnswers++;
+                feedback.innerText = 'उफ्फ! पुन: प्रयास गर्नुहोस्।';
+                feedback.style.color = 'red';
+                tryAgainAudio.play();
+            }
+
+            document.getElementById("nextButton").style.display = 'inline-block';
+            updateScoreboard();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex >= wordsPool.length) {
+                document.getElementById("question").innerText = 'तपाईंले सबै प्रश्नहरूको उत्तर दिनुभयो!';
+                document.querySelector(".options").style.display = 'none';
+                document.getElementById("nextButton").style.display = 'none';
+                showPerformance();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function updateScoreboard() {
+            document.getElementById("correctCount").innerText = `सहि उत्तर: ${correctAnswers}`;
+            document.getElementById("wrongCount").innerText = `गलत उत्तर: ${wrongAnswers}`;
+        }
+
+        function showPerformance() {
+            const totalQuestions = wordsPool.length;
+            const percentage = (correctAnswers / totalQuestions) * 100;
+            const performanceText = document.getElementById("performance");
+
+            if (percentage >= 90) {
+                performanceText.innerText = `ब्लास्ट! तपाईंको प्रदर्शन उत्कृष्ट छ (${Math.round(percentage)}%)`;
+                performanceText.style.color = 'gold';
+            } else if (percentage >= 70) {
+                performanceText.innerText = `सर्वश्रेष्ठ! तपाईंको प्रदर्शन राम्रो छ (${Math.round(percentage)}%)`;
+                performanceText.style.color = 'green';
+            } else if (percentage >= 30) {
+                performanceText.innerText = `पास! तपाईंको प्रदर्शन ठीक छ (${Math.round(percentage)}%)`;
+                performanceText.style.color = 'blue';
+            } else {
+                performanceText.innerText = `निराशाजनक! तपाईंको प्रदर्शन कमजोर छ (${Math.round(percentage)}%)`;
+                performanceText.style.color = 'red';
+            }
+        }
+
+        // Function to play the meaning of the word
+        function playMeaning() {
+            const meaning = wordsPool[currentQuestionIndex].meaning;
+            const speech = new SpeechSynthesisUtterance(meaning);
+            speech.lang = 'ne-NP'; // Nepali language
+            window.speechSynthesis.speak(speech);
+        }
+
+        // Load the first question
+        loadQuestion();
+    </script>
+</body>
+
+</html>
